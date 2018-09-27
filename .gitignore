@@ -1,0 +1,6 @@
+*.so
+*.pyd
+__pycache__/
+nimcache/
+.cache/
+.benchmarks/
