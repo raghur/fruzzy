@@ -1,0 +1,37 @@
+# Freaky fast fuzzy finder (Denite matcher)
+
+This is a denite.nvim matcher.
+
+## Installation
+
+`Plug 'raghur/fruzzy'`
+
+## Configuration
+
+`let fruzzy#usenative = 1`
+
+## Native modules
+
+Native module gives a 10 - 15x speedup over python - ~40-60μs!
+
+. Download and copy to `rplugin/python3`
+. Prebuilt windows and linux modules coming soon
+
+
+## Development
+
+.Running tests
+. Clone
+. cd `rplugin/python3`
+. `pytest` - run tests with python implementation
+. `FUZZY_CMOD=1 pytest` - run tests with native module
+
+.Build native module
+. install nim devel (0.18 and 0.18.1 will not work)
+. [Windows] `nim c --app:lib --out:fruzzy_mod.pyd -d:release -d:removelogger fruzzy_mod`
+. [Linux] `nim c --app:lib --out:fruzzy_mod.so -d:release -d:removelogger fruzzy_mod`
+. `-d:removelogger` 
+    - removes all log statements from code.
+    - Without this symbol defined, you will get info level logging.
+    - If you remove `-d:release` you will also get debug level logging
+
