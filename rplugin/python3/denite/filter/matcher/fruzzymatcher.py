@@ -13,7 +13,6 @@ if pkgPath not in sys.path:
 
 import fruzzy
 
-
 class Filter(Base):
 
     def __init__(self, vim):
@@ -22,7 +21,7 @@ class Filter(Base):
         self.name = 'matcher/fruzzy'
         self.description = 'fruzzy - freakishly fast fuzzy matcher'
         self.useNative = False
-        un = self.vim.api.get_var("fruzzy#usenative")
+        un = self.vim.vars["fruzzy#usenative"]
         if un > 0:
             try:
                 import fruzzy_mod

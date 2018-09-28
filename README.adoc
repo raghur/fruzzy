@@ -1,4 +1,4 @@
-# Freaky fast fuzzy finder (Denite matcher) for neovim
+# Freaky fast fuzzy finder (Denite matcher) for vim/neovim
 
 This is a denite.nvim matcher.
 
@@ -42,4 +42,4 @@ it in usual operation (python impl is at 300 - 600μs)
 
 ## TODOS
 
-. vim compat
+1. Ctrlp compat
