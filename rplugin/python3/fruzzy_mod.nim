@@ -5,6 +5,7 @@ import logging
 import strformat
 import sequtils
 import tables
+import os
 
 let L = newConsoleLogger(levelThreshold = logging.Level.lvlDebug)
 addHandler(L)
@@ -275,10 +276,14 @@ iterator fuzzyMatches(query:string, candidates: openarray[string], limit: int, i
 proc scoreMatchesStr(query: string, candidates: openarray[string], limit: int, ispath:bool=true): seq[tuple[i:int, r:int]] {.exportpy.} =
     result = newSeq[tuple[i:int, r:int]](limit)
     var idx = 0
-    # for m in fuzzyMatches01(query, candidates, limit, ispath):
-    for m in fuzzyMatches(query, candidates, limit, ispath):
-        result[idx] = m
-        idx.inc
+    if os.existsEnv("FRUZZY_USEALT"):
+        for m in fuzzyMatches01(query, candidates, limit, ispath):
+            result[idx] = m
+            idx.inc
+    else:
+        for m in fuzzyMatches(query, candidates, limit, ispath):
+            result[idx] = m
+            idx.inc
     result.setlen(idx)
     return
 
