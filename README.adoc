@@ -2,6 +2,8 @@
 
 This is a denite.nvim matcher.
 
+Read more at https://blog.rraghur.in/2018/09/27/fruzzy---a-freaky-fast-fuzzy-finder-for-vim/neovim/
+
 ## Installation
 
 `Plug 'raghur/fruzzy'`
@@ -11,8 +13,8 @@ This is a denite.nvim matcher.
 Native module gives a 10 - 15x speedup over python - ~40-60μs!. Not that you'd notice 
 it in usual operation (python impl is at 300 - 600μs)
 
-. Download and copy to `rplugin/python3`
-. in .vimrc - `let fruzzy#usenative = 1`
+. Download module from Releases and copy (on linux x64 - `fruzzy.so`, on windows x64 - `fruzzy.pyd`) to `rplugin/python3`
+. in .vimrc - `let g:fruzzy#usenative = 1`
 . restart nvim
 
 
