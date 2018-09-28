@@ -10,8 +10,12 @@ else:
 
 
 def scoreMatchesProxy(q, c, limit, key=None, ispath=True):
+    def idfn(x):
+        return x
+    if key is None:
+        key = idfn
     if useNative:
-        idxArr = scoreMatchesStr(q, c, limit, ispath)
+        idxArr = scoreMatchesStr(q, idfn(c), limit, ispath)
         results = []
         for i in idxArr:
             results.append((c[i[0]], i[1]))
