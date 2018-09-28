@@ -9,8 +9,7 @@ import os
 
 let L = newConsoleLogger(levelThreshold = logging.Level.lvlDebug)
 addHandler(L)
-const MAXCHARS = 10
-const MAXCHARCOUNT = 10
+const MAXCHARCOUNT = 30
 
 const sep:string = "-/\\_. "
 
@@ -26,7 +25,23 @@ type
         found:bool
         positions: seq[int]
         sepScore, clusterScore, camelCaseScore: int
-    MatchIndex = array[MAXCHARS, array[0..MAXCHARCOUNT, int]]
+    VarLenArr = ref array[0..MAXCHARCOUNT, int]
+
+proc newVarLenArr(): VarLenArr =
+    var o = new(VarLenArr)
+    return o
+
+proc len(a: VarLenArr): int {.inline.}= result = a[MAXCHARCOUNT]
+proc `[]`(a: VarLenArr, i: int): int {.inline.} = return a[i]
+proc `$`(a: VarLenArr): string {.inline.} = return $(a)
+proc high(a: VarLenArr): int {.inline.}= return a.len - 1
+proc add(a: VarLenArr, x: int) {.inline.}=
+    let p = a.len
+    a[p] = x
+    a[MAXCHARCOUNT].inc
+iterator rev(a: VarLenArr): int {.inline.}=
+    for i in countdown(a.high, 0):
+        yield a[i]
 
 # forward declaration
 proc scorer(x: Match, candidate:string, ispath:bool=true): int {.inline.}
@@ -55,21 +70,19 @@ proc assignScore(s: string, m: var Match) =
                 m.camelCaseScore.inc
         m.clusterScore.inc(v)
 
-proc rfirst1(a: openarray[int], predicate: proc(x: int): bool, last:int = -1): tuple[f:bool, v:int] =
+proc rfirst1(a: VarLenArr, predicate: proc(x: int): bool, last:int = -1): tuple[f:bool, v:int] =
     #[
     Find first item matching predicate in a(last .. 0)
     ]#
-    var s = last
-    if s == -1: s = a.high
-    for i in countdown(s, 0):
-        if predicate(a[i]):
-            return (true, a[i])
+    for m in a.rev:
+        if predicate(m):
+            return (true, m)
     return (false, -1)
 
 proc greaterThan(x : int): (proc(x:int):bool) = 
     return proc(y:int):bool = return y > x
 
-proc checkFullMatch(indexArr: var Table[char, seq[int]], lq: string, pos: int, m: var Match) =
+proc checkFullMatch(indexArr: var Table[char, VarLenArr], lq: string, pos: int, m: var Match) =
     var start = pos
     m.positions[0] = start
     l "Checking for entire string match starting from {pos}"
@@ -90,7 +103,7 @@ proc checkFullMatch(indexArr: var Table[char, seq[int]], lq: string, pos: int, m
             break
 
 proc matcher(q, s: string):Match =
-    var indexArr = initTable[char, seq[int]]()
+    var indexArr = initTable[char, VarLenArr]()
     let
         lq = q.toLowerAscii()
         ls = s.toLowerAscii()
@@ -101,7 +114,7 @@ proc matcher(q, s: string):Match =
     for i in countdown(ls.high, 0):
         let c = ls[i]
         if not indexArr.hasKey(c):
-            indexArr[c] = newSeq[int]()
+            indexArr[c] = newVarLenArr()
         indexArr[c].add(i)
         if c == lq[0]:
             checkFullMatch(indexArr, lq, i, result)
@@ -277,6 +290,7 @@ proc scoreMatchesStr(query: string, candidates: openarray[string], limit: int, i
     result = newSeq[tuple[i:int, r:int]](limit)
     var idx = 0
     if os.existsEnv("FRUZZY_USEALT"):
+        l "Using alternate impl"
         for m in fuzzyMatches01(query, candidates, limit, ispath):
             result[idx] = m
             idx.inc
@@ -284,13 +298,13 @@ proc scoreMatchesStr(query: string, candidates: openarray[string], limit: int, i
         for m in fuzzyMatches(query, candidates, limit, ispath):
             result[idx] = m
             idx.inc
+
     result.setlen(idx)
     return
 
 proc baseline(candidates: openarray[string] ): seq[tuple[i:int, r:int]] {.exportpy.} =
     result = newSeq[tuple[i:int, r:int]](candidates.len)
     var idx = 0
-    # for m in fuzzyMatches01(query, candidates, limit, ispath):
     for m in candidates:
         result[idx] = (idx, m.len)
         idx.inc
