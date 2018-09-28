@@ -4,6 +4,7 @@ import binaryheap
 import logging
 import strformat
 import sequtils
+import tables
 
 let L = newConsoleLogger(levelThreshold = logging.Level.lvlDebug)
 addHandler(L)
@@ -45,6 +46,10 @@ proc assignScore(s: string, m: var Match) =
                 ch = s[v]
             if prevChar in sep:
                 m.sepScore.inc
+            if v < s.high:
+                let nextChar = s[v+1]
+                if nextChar in sep:
+                    m.sepScore.inc
             if prevChar.isLowerAscii and ch.isUpperAscii:
                 m.camelCaseScore.inc
         m.clusterScore.inc(v)
@@ -63,15 +68,18 @@ proc rfirst1(a: openarray[int], predicate: proc(x: int): bool, last:int = -1): t
 proc greaterThan(x : int): (proc(x:int):bool) = 
     return proc(y:int):bool = return y > x
 
-proc checkFullMatch(indexArr: MatchIndex, lq: string, pos: int, m: var Match) =
+proc checkFullMatch(indexArr: var Table[char, seq[int]], lq: string, pos: int, m: var Match) =
     var start = pos
     m.positions[0] = start
     l "Checking for entire string match starting from {pos}"
     m.found = true
     for k in 1..lq.high:
-        let arrIdx = lq.find(lq[k])
-        l "looking for {lq[k]} in {indexArr[arrIdx]}, greater than {start}"
-        let (found, v) = rfirst1(indexArr[arrIdx], greaterThan(start), indexArr[arrIdx][MAXCHARCOUNT] - 1)
+        let ch = lq[k]
+        if not indexArr.hasKey(ch):
+            m.found = false
+            break
+        l "looking for {lq[k]} in {indexArr[ch]}, greater than {start}"
+        let (found, v) = rfirst1(indexArr[ch], greaterThan(start))
         if found:
             l "found at: {v}"
             start = v
@@ -81,7 +89,7 @@ proc checkFullMatch(indexArr: MatchIndex, lq: string, pos: int, m: var Match) =
             break
 
 proc matcher(q, s: string):Match =
-    var indexArr: MatchIndex
+    var indexArr = initTable[char, seq[int]]()
     let
         lq = q.toLowerAscii()
         ls = s.toLowerAscii()
@@ -91,20 +99,15 @@ proc matcher(q, s: string):Match =
     l "looking for {q} in {s}"
     for i in countdown(ls.high, 0):
         let c = ls[i]
-        let pos = lq.find(c)
-        if pos != -1:
-            let nextPos = indexArr[pos][MAXCHARCOUNT]
-            indexArr[pos][nextPos] = i
-            indexArr[pos][MAXCHARS].inc
-            l "found {c} at {i}, indexArr[{pos}][{nextPos}]={indexArr[pos][nextPos]}"
-            if pos == 0:
-                # first char was found - so see if we found the entire string
-                # after index i
-                checkFullMatch(indexArr, lq, i, result)
-                if result.found:
-                    assignScore(s, result)
-                    l "match: {result}"
-                    return
+        if not indexArr.hasKey(c):
+            indexArr[c] = newSeq[int]()
+        indexArr[c].add(i)
+        if c == lq[0]:
+            checkFullMatch(indexArr, lq, i, result)
+            if result.found:
+                assignScore(s, result)
+                l "match: {result}"
+                return
     l "no match: {result}"
     return result
 
