@@ -66,7 +66,12 @@ class Filter(Base):
             return fruzzy.scoreMatches(q, c, limit, key, ispath)
 
     def convert_pattern(self, input_str):
-        # return convert2fuzzy_pattern(input_str)
-        p = convert2fuzzy_pattern(input_str)
+        if not input_str:
+            return input_str
+        pat = ""
+        for c in input_str[:-1]:
+            pat = pat + "%s[^%s]{-}" % (c, c)
+        p = pat + input_str[-1]
+        # p = convert2fuzzy_pattern(input_str)
         # self.debug("pattern: %s : %s" % (input_str, p))
         return p
