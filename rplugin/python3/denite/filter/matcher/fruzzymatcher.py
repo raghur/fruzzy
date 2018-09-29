@@ -27,7 +27,7 @@ class Filter(Base):
                 import fruzzy_mod
                 self.nativeMethod = fruzzy_mod.scoreMatchesStr
                 self.useNative = True
-            except ModuleNotFoundError:
+            except ImportError:
                 self.debug("Native module requested but unable to load native module")
                 self.debug("falling back to python implementation")
                 self.debug("Check if you have nim_fuzzy.so or nim_fuzzy.pyd at %s" %
