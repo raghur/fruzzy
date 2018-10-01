@@ -10,7 +10,7 @@ In your `.vimrc`:
 
 ```
 " vim-plug; for other plugin managers, use what's appropriate
-Plug 'raghur/fruzzy'
+Plug 'raghur/fruzzy' {'do': { -> fruzzy#install()}}
 
 " optional - but recommended - see below
 let g:fruzzy#usenative = 1
@@ -24,11 +24,8 @@ call denite#custom#source('_', 'matchers', ['matcher/fruzzy'])
 Native module gives a 10 - 15x speedup over python - ~40-60μs!. Not that you'd notice 
 it in usual operation (python impl is at 300 - 600μs)
 
-. Download module from Releases and copy (on linux x64 - `fruzzy.so`, on windows x64 - `fruzzy.pyd`) to `<path/to/fruzzy/rplugin/python3`
+. Run command `:call fruzzy#install()` if you're not using vim-plug.
 . restart nvim
-
-
-* I'll try my hand at automated install - but don't hold your breath. 
 
 ## Development
 
