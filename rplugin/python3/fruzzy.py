@@ -57,7 +57,11 @@ def scorer(x, key, ispath=True):
     # return position_boost + cluster_boost + sep_boost + camel_boost
 
 
-def scoreMatches(query, candidates, limit, key=None, ispath=True):
+def scoreMatches(query, candidates, current, limit, key=None, ispath=True):
+    # TODO: implement levenshtein but not at the cost of complicating the
+    # installation
+    if query == "":
+        return ((c, 0) for c in candidates)
     key = idfn if not key else key
     matches = fuzzyMatches(query, candidates, limit * 5, key, ispath)
     return heapq.nlargest(limit, matches, key=lambda x: x[5])

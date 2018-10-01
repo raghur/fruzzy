@@ -3,6 +3,7 @@ from denite.util import convert2fuzzy_pattern
 import os
 import sys
 import logging
+from os import path
 
 logger = logging.getLogger()
 pkgPath = os.path.dirname(__file__).split(os.path.sep)[:-3]
@@ -36,42 +37,47 @@ class Filter(Base):
         self.debug("usenative: %s" % self.useNative)
 
     def filter(self, context):
-        if not context['candidates'] or not context['input']:
-            return context['candidates']
         candidates = context['candidates']
         qry = context['input']
         # self.debug("source: %s" % candidates[0]['source_name'])
         # self.debug("source: %s" % context['source_name'])
-        ispath = candidates[0]['source_name'] in ["file", "file_rec",
-                                                  "file_mru", "directory",
-                                                  "directory_mru", "file_old",
-                                                  "directory_rec", "buffer"]
+        ispath = False
+        for s in context['sources']:
+            if s['name'] in ["file", "file_rec",
+                             "file_mru", "directory",
+                             "directory_mru", "file_old",
+                             "directory_rec", "buffer"]:
+                ispath = True
+                break
         # self.debug("candidates %s %s" % (qry, len(candidates)))
         results = self.scoreMatchesProxy(qry, candidates, 10,
                                          key=lambda x: x['word'],
-                                         ispath=ispath)
+                                         ispath=ispath,
+                                         buffer=context['bufnr'])
         # self.debug("results %s" % results)
         rset = [w[0] for w in results]
         # self.debug("rset %s" % rset)
         return rset
 
-    def scoreMatchesProxy(self, q, c, limit, key=None, ispath=True):
+    def scoreMatchesProxy(self, q, c, limit, key=None, ispath=True, buffer=0):
+        relname = ""
+        if ispath and buffer > 0 and q == "":
+            fname = self.vim.buffers[buffer].name
+            d = self.vim.command("pwd")
+            relname = path.relpath(fname, start=d)
+            self.debug("buffer: %s, '%s'" % (relname, q))
         if self.useNative:
-            idxArr = self.nativeMethod(q, [key(d) for d in c], limit, ispath)
+            idxArr = self.nativeMethod(q, [key(d) for d in c],
+                                       relname, limit, ispath)
             results = []
             for i in idxArr:
-                results.append((c[i[0]], i[1]))
+                idx, score = i
+                results.append((c[idx], score))
             return results
         else:
-            return fruzzy.scoreMatches(q, c, limit, key, ispath)
+            return fruzzy.scoreMatches(q, c, relname, limit, key, ispath)
 
     def convert_pattern(self, input_str):
-        if not input_str:
-            return input_str
-        pat = ""
-        for c in input_str[:-1]:
-            pat = pat + "%s[^%s]{-}" % (c, c)
-        p = pat + input_str[-1]
-        # p = convert2fuzzy_pattern(input_str)
-        # self.debug("pattern: %s : %s" % (input_str, p))
+        p = convert2fuzzy_pattern(input_str)
+        self.debug("pattern: %s : %s" % (input_str, p))
         return p

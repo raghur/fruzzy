@@ -262,31 +262,36 @@ proc isMatch(query, candidate: string, m: var Match) =
             break
     return
 
-iterator fuzzyMatches(query:string, candidates: openarray[string], limit: int, ispath: bool = true): tuple[i:int, r:int] =
+iterator fuzzyMatches(query:string, candidates: openarray[string], current: string, limit: int, ispath: bool = true): tuple[i:int, r:int] =
     let findFirstN = true
     var count = 0
     var mtch:Match
     mtch.positions = newSeq[int](query.len)
     var heap = newHeap[tuple[i:int, r:int]]() do (a, b: tuple[i:int, r:int]) -> int:
         b.r - a.r
-    for i, x in candidates:
-        l "processing:  {x}"
-        isMatch(query, x, mtch)
-        if mtch.found:
-            count.inc
-            l "ADDED: {x}"
-            let rank = scorer(mtch, x, ispath)
-            info &"{x} - {mtch} - {rank}"
-            heap.push((i, rank))
-            if findFirstN and count == limit * 5:
-                break
+    if query != "":
+        for i, x in candidates:
+            l "processing:  {x}"
+            isMatch(query, x, mtch)
+            if mtch.found:
+                count.inc
+                l "ADDED: {x}"
+                let rank = scorer(mtch, x, ispath)
+                info &"{x} - {mtch} - {rank}"
+                heap.push((i, rank))
+                if findFirstN and count == limit * 5:
+                    break
+    else: # if blank string just take N items based on levenshtien (rev)
+        for i, x in candidates:
+            if current != x:
+                heap.push((i, 300 - current.editDistance(x)))
     count = 0
     while count < limit and heap.size > 0:
         let item =  heap.pop
         yield item
         count.inc
 
-proc scoreMatchesStr(query: string, candidates: openarray[string], limit: int, ispath:bool=true): seq[tuple[i:int, r:int]] {.exportpy.} =
+proc scoreMatchesStr(query: string, candidates: openarray[string], current: string, limit: int, ispath:bool=true): seq[tuple[i:int, r:int]] {.exportpy.} =
     result = newSeq[tuple[i:int, r:int]](limit)
     var idx = 0
     if os.existsEnv("FRUZZY_USEALT"):
@@ -295,7 +300,7 @@ proc scoreMatchesStr(query: string, candidates: openarray[string], limit: int, i
             result[idx] = m
             idx.inc
     else:
-        for m in fuzzyMatches(query, candidates, limit, ispath):
+        for m in fuzzyMatches(query, candidates, current, limit, ispath):
             result[idx] = m
             idx.inc
 
