@@ -65,7 +65,7 @@ class Filter(Base):
             fname = self.vim.buffers[buffer].name
             d = self.vim.command("pwd")
             relname = path.relpath(fname, start=d)
-            self.debug("buffer: %s, '%s'" % (relname, q))
+            # self.debug("buffer: %s, '%s'" % (relname, q))
         if self.useNative:
             idxArr = self.nativeMethod(q, [key(d) for d in c],
                                        relname, limit, ispath)
@@ -79,5 +79,5 @@ class Filter(Base):
 
     def convert_pattern(self, input_str):
         p = convert2fuzzy_pattern(input_str)
-        self.debug("pattern: %s : %s" % (input_str, p))
+        # self.debug("pattern: %s : %s" % (input_str, p))
         return p
