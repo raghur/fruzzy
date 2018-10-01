@@ -50,7 +50,8 @@ class Filter(Base):
                 ispath = True
                 break
         # self.debug("candidates %s %s" % (qry, len(candidates)))
-        results = self.scoreMatchesProxy(qry, candidates, 10,
+        results = self.scoreMatchesProxy(qry, candidates,
+                                         context["winheight"],
                                          key=lambda x: x['word'],
                                          ispath=ispath,
                                          buffer=context['bufnr'])
