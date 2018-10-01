@@ -64,8 +64,11 @@ class Filter(Base):
         if ispath and buffer > 0 and q == "":
             fname = self.vim.buffers[buffer].name
             d = self.vim.command("pwd")
-            relname = path.relpath(fname, start=d)
-            # self.debug("buffer: %s, '%s'" % (relname, q))
+            try:
+                relname = path.relpath(fname, start=d)
+            except ValueError:
+                relname = fname
+                self.debug("buffer: %s, '%s'" % (relname, d))
         if self.useNative:
             idxArr = self.nativeMethod(q, [key(d) for d in c],
                                        relname, limit, ispath)
