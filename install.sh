@@ -62,7 +62,7 @@ download() {
   if fetch "${url}" > fruzzy_mod.so; then
     return
   else
-    warn "Binary not found."
+    warn "Binary not found, please wait for a few minutes."
   fi
 }
 
@@ -73,6 +73,6 @@ arch=$(uname -sm)
 case "${arch}" in
   "Linux x86_64") download fruzzy_mod.so ;;
   "Linux i686") download fruzzy_mod.so ;;
-  "Darwin x86_64") download fruzzy_mod.so ;;
+  "Darwin x86_64") download fruzzy_mod_mac.so ;;
   *) info "No pre-built binary available for ${arch}.";;
 esac
