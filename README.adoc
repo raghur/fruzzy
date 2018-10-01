@@ -10,7 +10,11 @@ In your `.vimrc`:
 
 ```
 " vim-plug; for other plugin managers, use what's appropriate
-Plug 'raghur/fruzzy' {'do': { -> fruzzy#install()}}
+" if you don't want to trust a prebuilt binary, skip the 'do' part
+" and build the binaries yourself. Instructions are further down
+" and place them in the /path/to/plugin/rplugin/python3 folder
+
+Plug 'raghur/fruzzy', {'do': { -> fruzzy#install()}}
 
 " optional - but recommended - see below
 let g:fruzzy#usenative = 1
