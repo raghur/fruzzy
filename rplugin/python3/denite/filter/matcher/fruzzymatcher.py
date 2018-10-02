@@ -40,7 +40,7 @@ class Filter(Base):
         candidates = context['candidates']
         qry = context['input']
         # self.debug("source: %s" % candidates[0]['source_name'])
-        # self.debug("source: %s" % context['source_name'])
+        # self.debug("context: %s" % context)
         ispath = False
         for s in context['sources']:
             if s['name'] in ["file", "file_rec",
@@ -50,11 +50,15 @@ class Filter(Base):
                 ispath = True
                 break
         # self.debug("candidates %s %s" % (qry, len(candidates)))
+        limit = context['winheight']
+        limit = int(limit) if isinstance(limit, str) else limit
+        buffer = context['bufnr']
+        buffer = int(buffer) if isinstance(buffer, str) else buffer
         results = self.scoreMatchesProxy(qry, candidates,
-                                         context["winheight"],
+                                         limit,
                                          key=lambda x: x['word'],
                                          ispath=ispath,
-                                         buffer=context['bufnr'])
+                                         buffer=buffer)
         # self.debug("results %s" % results)
         rset = [w[0] for w in results]
         # self.debug("rset %s" % rset)
