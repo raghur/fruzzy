@@ -24,26 +24,24 @@ def install():
         'https://api.github.com/repos/raghur/fruzzy/releases/latest',
         headers={'Accept': 'application/vnd.github.v3+json'},)).read())
     asset = get_asset(_json["assets"])
-    print(__file__)
+    # print(__file__)
     dirname = path.normpath(path.join(path.dirname(__file__), ".."))
     outfile = path.join(dirname, "rplugin/python3/fruzzy_mod")
     extn = ".pyd" if sys.platform == "win32" else ".so"
+    altfile = outfile + ".1" + extn
+    outfile = outfile + extn
     try:
         print("fruzzy: downloading %s to %s" % (asset['browser_download_url'],
                                                 asset['name']))
-        urllib.request.urlretrieve(asset['browser_download_url'],
-                                   outfile + extn)
-        print("native mod %s installed - restart vim/nvim if needed" %
-              (outfile + extn))
+        urllib.request.urlretrieve(asset['browser_download_url'], outfile)
+        print("native mod %s installed - restart vim/nvim if needed" % outfile)
     except PermissionError as e:
-        # happens on windows if hte mod is loaded
+        # happens on windows if the mod is loaded
         print("fruzzy: unable to write to file: ", e)
-        newfile = outfile + ".1"
-        print("fruzzy: saving as %s" % newfile + extn)
-        urllib.request.urlretrieve(asset['browser_download_url'], newfile +
-                                   extn)
+        print("fruzzy: saving as %s" % altfile)
+        urllib.request.urlretrieve(asset['browser_download_url'], altfile)
         print("fruzzy: Exit vim/nvim & rename %s file to %s " %
-              (newfile + extn, outfile + extn))
+              (altfile, outfile))
 
 
 if __name__ == "__main__":
