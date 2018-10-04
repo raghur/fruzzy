@@ -40,7 +40,6 @@ def scorer(x, key, ispath=True):
         # print(candidate, lastPathSep, x[1], fileMatchCount)
         filematchBoost = 100 * fileMatchCount // lqry
 
-
     # how closely are matches clustered
     cluster_boost = 100 * (1 - x[2]//lcan) * 4
 
@@ -58,6 +57,23 @@ def scorer(x, key, ispath=True):
 
 
 def scoreMatches(query, candidates, current, limit, key=None, ispath=True):
+    """Find fuzzy matches among given candidates
+
+    :query: the fuzzy string
+    :candidates: list of items
+    :limit: max number of resuls
+    :key: func to extract string to match the query against.
+    :returns: list of tuples
+        (x, postions, clusterScore, sepScore, camelCaseScore, rank) where
+        - x - the matched item in candidates
+        - postions - array of ints of matched char positions
+        - clusterScore - how closely are the positions clustered. 0 means
+        consecutive. Lower is better.
+        - sepScore - how many matches are after separators. higher is better.
+        - camelCaseScore - how many matches were camelCase. higher is better
+        - rank - cumulative rank calculated by scorer, higher is better
+    list length is limited to limit
+    """
     # TODO: implement levenshtein but not at the cost of complicating the
     # installation
     if query == "":
@@ -68,6 +84,13 @@ def scoreMatches(query, candidates, current, limit, key=None, ispath=True):
 
 
 def isMatch(query, candidate):
+    """check if candidate matches query fuzzily
+
+    :query: the fuzzy string
+    :candidate: the string to search in
+    :returns: tuple (didMatch, postions, clusterScore, sepScore, camelCaseScore)
+        - Other values have relevance only if didMatch is true.
+    """
     def walkString(query, candidate, left, right):
         # print("Call ", query, left, right)
         orig = candidate
@@ -134,11 +157,19 @@ def isMatch(query, candidate):
 def fuzzyMatches(query, candidates, limit, key=None, ispath=True):
     """Find fuzzy matches among given candidates
 
-    :query: TODO
-    :candidates: TODO
-    :limit: TODO
-    :returns: TODO
-
+    :query: the fuzzy string
+    :candidates: list of items
+    :limit: max number of resuls
+    :key: func to extract string to match the query against.
+    :returns: list of tuple of
+        (x, postions, clusterScore, sepScore, camelCaseScore, rank) where
+        - x - the matched item in candidates
+        - postions - array of ints of matched char positions
+        - clusterScore - how closely are the positions clustered. 0 means
+        consecutive. Lower is better.
+        - sepScore - how many matches are after separators. higher is better.
+        - camelCaseScore - how many matches were camelCase. higher is better
+        - rank - cumulative rank calculated by scorer, higher is better
     """
     key = idfn if not key else key
     findFirstN = True
@@ -149,7 +180,7 @@ def fuzzyMatches(query, candidates, limit, key=None, ispath=True):
         if didMatch:
             count = count + 1
             yield (x, positions, *rest, scorer((x, positions, *rest), key,
-                                               ispath ))
+                                               ispath))
             if findFirstN and count == limit:
                 return
 
