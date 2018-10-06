@@ -17,13 +17,13 @@ def printResults(query, results):
 
 def scoreMatches(q, c, limit, ispath):
     if useNative:
-        idxArr = fruzzy_mod.scoreMatchesStr(q, c, limit, ispath)
+        idxArr = fruzzy_mod.scoreMatchesStr(q, c, "", limit, ispath)
         results = []
         for i in idxArr:
             results.append((c[i[0]],i[1]))
         return results
     else:
-        return fruzzy.scoreMatches(q, c, limit, ispath=ispath)
+        return fruzzy.scoreMatches(q, c, "", limit, ispath=ispath)
 
 check = True
 lines = []

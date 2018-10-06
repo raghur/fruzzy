@@ -15,13 +15,14 @@ def scoreMatchesProxy(q, c, limit, key=None, ispath=True):
     if key is None:
         key = idfn
     if useNative:
-        idxArr = scoreMatchesStr(q, idfn(c), limit, ispath)
+        idxArr = scoreMatchesStr(q, [key(x) for x in c],
+                                 "", limit, ispath)
         results = []
         for i in idxArr:
             results.append((c[i[0]], i[1]))
         return results
     else:
-        return scoreMatches(q, c, limit, key, ispath)
+        return scoreMatches(q, c, "", limit, key, ispath)
 
 
 lines = []
