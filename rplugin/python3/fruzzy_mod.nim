@@ -6,12 +6,20 @@ import strformat
 import sequtils
 import tables
 import os
+import system
+
+proc getVersion(): string {.compileTime.}=
+    let ver = staticExec("git describe --tags --always --dirty")
+    # let cTime = format(times.now(), "yyyy-MM-dd hh:mm:ss")
+    let branch = staticExec("git rev-parse --abbrev-ref HEAD")
+    return &"rev: {ver} on branch: {branch}"
 
 let L = newConsoleLogger(levelThreshold = logging.Level.lvlDebug)
 addHandler(L)
 const MAXCHARCOUNT = 30
 
 const sep:string = "-/\\_. "
+const VERSION = getVersion()
 
 template info(args: varargs[string, `$`]) =
     when not defined(removelogger):
@@ -315,3 +323,6 @@ proc baseline(candidates: openarray[string] ): seq[tuple[i:int, r:int]] {.export
         idx.inc
     result.setlen(idx)
     return
+
+proc version():string {.exportpy.} =
+    return VERSION

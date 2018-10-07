@@ -28,10 +28,17 @@ class Filter(Base):
                 import fruzzy_mod
                 self.nativeMethod = fruzzy_mod.scoreMatchesStr
                 self.useNative = True
+                if 'version' not in dir(fruzzy_mod):
+                    self.debug("You have an old version of the native module")
+                    self.debug("please execute :call fruzzy#install()")
+                else:
+                    self.debug("fruzzy_mod ver: %s" %
+                               fruzzy_mod.version())
             except ImportError:
-                self.debug("Native module requested but unable to load native module")
+                self.debug("Native module requested but module was not found")
                 self.debug("falling back to python implementation")
-                self.debug("Check if you have nim_fuzzy.so or nim_fuzzy.pyd at %s" %
+                self.debug("execute :call fruzzy#install() to install the native module")
+                self.debug("and then check if you have fruzzy_mod.so or fruzzy_mod.pyd at %s" %
                            pkgPath)
                 self.useNative = False
         self.debug("usenative: %s" % self.useNative)
