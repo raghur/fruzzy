@@ -1,6 +1,8 @@
 import sys
 import heapq
 import itertools
+import logging
+
 
 sep = '-/\_. '
 
@@ -92,7 +94,7 @@ def isMatch(query, candidate):
         - Other values have relevance only if didMatch is true.
     """
     def walkString(query, candidate, left, right):
-        # print("Call ", query, left, right)
+        logging.debug("Call: %s, %d, %d", query, left, right)
         orig = candidate
         candidate = candidate.lower()
         query = query.lower()
@@ -102,12 +104,12 @@ def isMatch(query, candidate):
         clusterScore = 0
         camelCaseScore = 0
         for i, c in enumerate(query):
-            # print ("Looking", i, c, left, right)
+            logging.debug("Looking %d, %s, %d, %d", i, c, left, right)
             if first:
                 pos = candidate.rfind(c, left, right)
             else:
                 pos = candidate.find(c, left)
-            # print("Result", i, pos, c)
+            logging.debug("Result %d, %d, %s", i, pos, c)
             if pos == -1:
                 if first:
                     # if the first char was not found anywhere we're done
@@ -150,7 +152,7 @@ def isMatch(query, candidate):
             break  # all done too - first char didn't match
 
         # resume search - start looking left from this position onwards
-        r = positions[0]
+        r = positions[0] + 1
     return (didMatch, positions, *rest)
 
 
@@ -174,8 +176,10 @@ def fuzzyMatches(query, candidates, limit, key=None, ispath=True):
     key = idfn if not key else key
     findFirstN = True
     count = 0
+    logging.debug("query: %s", query)
     for x in candidates:
         s = key(x)
+        logging.debug("Candidate %s", x)
         didMatch, positions, *rest = isMatch(query, s)
         if didMatch:
             count = count + 1
@@ -205,7 +209,8 @@ if __name__ == "__main__":
         query = sys.argv[2]
 
     with open(file) as fh:
+        logging.basicConfig(level=logging.DEBUG)
         lines = (line.strip() for line in fh.readlines())
-        for x in scoreMatches(query, lines, 10):
+        for x in scoreMatches(query, lines, "", 10):
             print(x)
 

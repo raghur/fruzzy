@@ -116,3 +116,16 @@ def test_must_ignore_position_for_non_file_matching():
     results = list(scoreMatchesProxy("is", c, 10, ispath=False))
     assert results[0][0].endswith("fileone.txt")
 
+
+def test_for_bug_08():
+    c = ['.gitignore', 'README.adoc', 'python3/ctrlp.py',
+         'plugin/fruzzy.vim', 'autoload/fruzzy.vim',
+         'autoload/fruzzy/ctrlp.vim', 'rplugin/python3/fruzzy.py',
+         'rplugin/python3/qc-fast.py', 'python3/fruzzy_installer.py',
+         'rplugin/python3/neomru_file', 'rplugin/python3/qc-single.py',
+         'rplugin/python3/fruzzy_mod.nim',
+         'rplugin/python3/fruzzy_test.py',
+         'rplugin/python3/denite/filter/matcher/fruzzymatcher.py']
+    results = list(scoreMatchesProxy("fmf", c, 10, ispath=True))
+    assert results[0][0] == \
+        'rplugin/python3/denite/filter/matcher/fruzzymatcher.py'
