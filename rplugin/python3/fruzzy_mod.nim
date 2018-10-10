@@ -279,6 +279,8 @@ iterator fuzzyMatches(query:string, candidates: openarray[string], current: stri
         b.r - a.r
     if query != "":
         for i, x in candidates:
+            if ispath and x == current:
+                continue
             l "processing:  {x}"
             isMatch(query, x, mtch)
             if mtch.found:

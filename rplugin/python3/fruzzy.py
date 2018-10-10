@@ -81,7 +81,7 @@ def scoreMatches(query, candidates, current, limit, key=None, ispath=True):
     if query == "":
         return ((c, 0) for c in candidates)
     key = idfn if not key else key
-    matches = fuzzyMatches(query, candidates, limit * 5, key, ispath)
+    matches = fuzzyMatches(query, candidates, current, limit * 5, key, ispath)
     return heapq.nlargest(limit, matches, key=lambda x: x[5])
 
 
@@ -156,7 +156,7 @@ def isMatch(query, candidate):
     return (didMatch, positions, *rest)
 
 
-def fuzzyMatches(query, candidates, limit, key=None, ispath=True):
+def fuzzyMatches(query, candidates, current, limit, key=None, ispath=True):
     """Find fuzzy matches among given candidates
 
     :query: the fuzzy string
@@ -179,6 +179,8 @@ def fuzzyMatches(query, candidates, limit, key=None, ispath=True):
     logging.debug("query: %s", query)
     for x in candidates:
         s = key(x)
+        if ispath and s == current:
+            continue
         logging.debug("Candidate %s", x)
         didMatch, positions, *rest = isMatch(query, s)
         if didMatch:
