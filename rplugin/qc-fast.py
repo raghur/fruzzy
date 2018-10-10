@@ -1,11 +1,10 @@
-import fruzzy_mod
-import fruzzy
+from python3 import fruzzy
 import sys
 import os
 
 useNative = False
 if os.getenv("FUZZY_CMOD"):
-    from fruzzy_mod import scoreMatchesStr, baseline
+    from python3.fruzzy_mod import scoreMatchesStr, baseline
     useNative = True
 
 
@@ -17,7 +16,7 @@ def printResults(query, results):
 
 def scoreMatches(q, c, limit, ispath):
     if useNative:
-        idxArr = fruzzy_mod.scoreMatchesStr(q, c, "", limit, ispath)
+        idxArr = scoreMatchesStr(q, c, "", limit, ispath)
         results = []
         for i in idxArr:
             results.append((c[i[0]],i[1]))

@@ -6,6 +6,7 @@ else
 endif
 
 src = rplugin/python3
+test = rplugin
 relopt = -d:release -d:removelogger
 infoopt = -d:release
 native = FUZZY_CMOD=1
@@ -22,23 +23,23 @@ build:
 
 debug-single: build-debug
 	@echo Testing native mod with minimal file
-	cd $(src) && \
+	cd $(test) && \
 	python3 qc-single.py
 
 debug-native: build-debug
-	cd $(src) && \
+	cd $(test) && \
 	$(native) python3 qc-fast.py
 
 debug:
-	cd $(src) && \
+	cd $(test) && \
 	python3 qc-fast.py
 
 test-py:
-	cd $(src) && \
+	cd $(test) && \
 	pytest
 
 test-native: build
-	cd $(src) && \
+	cd $(test) && \
 	$(native) pytest
 
 

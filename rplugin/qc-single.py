@@ -1,4 +1,4 @@
-import fruzzy_mod
+from python3 import fruzzy_mod
 l = ["d:/code/go/src/github.com/raghur/fuzzy-denite/scratch/pyfuzzy.py"]
 print("fuzz", l, fruzzy_mod.scoreMatchesStr("fuzz", l, "", 10,True))
 

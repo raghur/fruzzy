@@ -1,12 +1,12 @@
 import os
 import pytest
-from fruzzy import fuzzyMatches, isMatch
+from python3.fruzzy import fuzzyMatches, isMatch
 useNative = False
 if os.getenv("FUZZY_CMOD"):
-    from fruzzy_mod import scoreMatchesStr, baseline
+    from python3.fruzzy_mod import scoreMatchesStr, baseline
     useNative = True
 else:
-    from fruzzy import scoreMatches
+    from python3.fruzzy import scoreMatches
 
 
 def scoreMatchesProxy(q, c, limit, key=None, ispath=True):
