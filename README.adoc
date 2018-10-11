@@ -33,23 +33,24 @@ it in usual operation (python impl is at 300 - 600μs)
 
 ## Development
 
-.Running tests
-. Clone
-. cd `rplugin/python3`
-. `pytest` - run tests with python implementation
-. `FUZZY_CMOD=1 pytest` - run tests with native module
-
 .Build native module
-. install nim devel (0.18 and 0.18.1 will not work)
+. install nim >= 0.19
 . dependencies
 .. nimble install binaryheap
 .. nimble install nimpy
+. `cd rplugin/python3`
 . [Windows] `nim c --app:lib --out:fruzzy_mod.pyd -d:release -d:removelogger fruzzy_mod`
 . [Linux] `nim c --app:lib --out:fruzzy_mod.so -d:release -d:removelogger fruzzy_mod`
 . `-d:removelogger` 
     - removes all log statements from code.
-    - Without this symbol defined, you will get info level logging.
-    - If you remove `-d:release` you will also get debug level logging
+    - When `removelogger` is not defined, only info level logs are emitted
+    - Debug builds (ie: without `-d:release` flag) also turns on additional debug level logs
+
+.Running tests
+. cd `rplugin`
+. `pytest` - run tests with python implementation
+. `FUZZY_CMOD=1 pytest` - run tests with native module
+
 
 ## TODOS
 
