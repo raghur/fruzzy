@@ -9,10 +9,19 @@ import os
 import system
 
 proc getVersion(): string {.compileTime.}=
-    let ver = staticExec("git describe --tags --always --dirty")
+    let ver = staticExec("git describe --tags --always --dirty").strip()
     # let cTime = format(times.now(), "yyyy-MM-dd hh:mm:ss")
-    let branch = staticExec("git rev-parse --abbrev-ref HEAD")
-    return &"rev: {ver} on branch: {branch}"
+    let branch = staticExec("git rev-parse --abbrev-ref HEAD").strip()
+    var options:seq[string] = newSeq[string]()
+    if not defined(removelogger):
+        options.add("info")
+    if not defined(release):
+        options.add("debug")
+    else:
+        options.add("release")
+    let optionsStr = options.join(",")
+
+    return &"rev: {ver} on branch: {branch} with options: {optionsStr}"
 
 let L = newConsoleLogger(levelThreshold = logging.Level.lvlDebug)
 addHandler(L)
