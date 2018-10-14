@@ -1,6 +1,7 @@
-# Freaky fast fuzzy finder (Denite matcher) for vim/neovim
+# Freaky fast fuzzy Denite/CtrlP matcher for vim/neovim
 
-This is a denite.nvim matcher.
+This is a matcher plugin for [denite.nvim](https://github.com/Shougo/denite.nvim) 
+and [CtrlP](https://github.com/ctrlpvim/ctrlp.vim).
 
 Read more at https://blog.rraghur.in/2018/09/27/fruzzy---a-freaky-fast-fuzzy-finder-for-vim/neovim/
 
@@ -8,7 +9,7 @@ Read more at https://blog.rraghur.in/2018/09/27/fruzzy---a-freaky-fast-fuzzy-fin
 
 In your `.vimrc`:
 
-```
+```vim
 " vim-plug; for other plugin managers, use what's appropriate
 " if you don't want to trust a prebuilt binary, skip the 'do' part
 " and build the binaries yourself. Instructions are further down
@@ -21,6 +22,9 @@ let g:fruzzy#usenative = 1
 
 " tell denite to use this matcher by default for all sources
 call denite#custom#source('_', 'matchers', ['matcher/fruzzy'])
+
+" tell CtrlP to use this matcher
+let g:ctrlp_match_func = {'match': 'fruzzy#ctrlp#matcher'}
 ```
 
 ## Native modules
@@ -52,6 +56,3 @@ it in usual operation (python impl is at 300 - 600μs)
 . `FUZZY_CMOD=1 pytest` - run tests with native module
 
 
-## TODOS
-
-1. Ctrlp compat
