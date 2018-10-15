@@ -10,7 +10,8 @@ test = rplugin
 relopt = -d:release -d:removelogger
 infoopt = -d:release
 native = FUZZY_CMOD=1
-win = --os:windows --cpu:amd64 --gcc.exe:/usr/bin/x86_64-w64-mingw32-gcc --gcc.linkerexe:/usr/bin/x86_64-w64-mingw32-gcc
+win = --os:windows --cpu:amd64 --out:fruzzy_mod.pyd
+macos = --os:macosx --cpu:amd64 --out:fruzzy_mod_mac.so
 binary=fruzzy_mod.$(extn)
 
 build-debug:
@@ -45,12 +46,23 @@ test-native: build
 
 test: test-py test-native
 
+macos:
+	cd $(src) && \
+		nim c --app:lib $(macos) $(relopt) fruzzy_mod
 win:
 ifndef WINDIR
 	cd $(src) && \
-		nim c --app:lib $(win) --out:fruzzy_mod.pyd $(relopt) fruzzy_mod
+		nim c --app:lib $(win) $(relopt) fruzzy_mod
 endif
 
+rel:
+	@echo "container image: https://github.com/miyabisun/docker-nim-cross"
+	@echo
+	docker run -it --rm -v `pwd`:/usr/local/src nim-cross \
+		/bin/bash -c "nimble install -y binaryheap nimpy && make cross"
+
 all: test build
-rel: win build
+
+# this goal should be run inside docker container
+cross: macos win build
 	ls -al $(src)/fruzzy_mod*
