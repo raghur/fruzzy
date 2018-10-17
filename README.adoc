@@ -26,13 +26,14 @@ let g:fruzzy#usenative = 1
 " Useful if you're bouncing a lot between similar files.
 " To turn off this behavior, set the variable below  to 0
 
-let g:fruzzy#sortonempty = 1 "default value
+let g:fruzzy#sortonempty = 1 " default value
 
 " tell denite to use this matcher by default for all sources
 call denite#custom#source('_', 'matchers', ['matcher/fruzzy'])
 
 " tell CtrlP to use this matcher
 let g:ctrlp_match_func = {'match': 'fruzzy#ctrlp#matcher'}
+let g:ctrlp_match_current_file = 1 " to include current file in matches
 ```
 
 ## Native modules
@@ -42,6 +43,25 @@ it in usual operation (python impl is at 300 - 600μs)
 
 . Run command `:call fruzzy#install()` if you're not using vim-plug.
 . restart nvim
+
+## Troubleshooting/Support
+
+Raise a ticket - please include the following info:
+
+.Get the version
+. Start vim/nvim
+. Activate denite/ctrlp as the case may be.
+. Execute `:call fruzzy#version()` - this will print one of the following
+.. version number and branch - all is good
+.. `purepy` - you're using the pure python version.
+.. `modnotfound` - you requested the native mod with `let g:fruzzy#usenative=1` but it could not be loaded
+.. `outdated` - native mod was loaded but it's < v0.3. You can update the native mod from the releases. 
+. include output of the above
+
+.Describe the issue
+. include the list of items
+. include your query
+. What it did vs what you expected it to do.
 
 ## Development
 
