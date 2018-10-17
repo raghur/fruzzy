@@ -25,10 +25,12 @@ def fruzzy_match():
     args['limit'] = int(args['limit'])
     args['ispath'] = int(args['ispath'])
 
+    sortonempty = vim.vars.get('fruzzy#sortonempty', 1)
+    current = args['current'] if sortonempty else ""
     if USE_NATIVE:
         output = scoreMatchesStr(args['query'],
                                  args['candidates'],
-                                 args['current'],
+                                 current,
                                  args['limit'],
                                  args['ispath'])
         matches = [args['candidates'][i[0]] for i in output]

@@ -54,21 +54,25 @@ class Filter(Base):
         limit = int(limit) if isinstance(limit, str) else limit
         buffer = context['bufnr']
         buffer = int(buffer) if isinstance(buffer, str) else buffer
+        sortOnEmptyQuery = self.vim.vars.get("fruzzy#sortonempty", 1)
         results = self.scoreMatchesProxy(qry, candidates,
                                          limit,
                                          key=lambda x: x['word'],
                                          ispath=ispath,
-                                         buffer=buffer)
+                                         buffer=buffer,
+                                         sortonempty=sortOnEmptyQuery)
         # self.debug("results %s" % results)
         rset = [w[0] for w in results]
         # self.debug("rset %s" % rset)
         return rset
 
-    def scoreMatchesProxy(self, q, c, limit, key=None, ispath=True, buffer=0):
+    def scoreMatchesProxy(self, q, c, limit, key=None, ispath=True, buffer=0,
+                          sortonempty=True):
         relname = ""
-        if ispath and buffer > 0 and q == "":
+        if sortonempty and ispath and buffer > 0 and q == "":
             fname = self.vim.buffers[buffer].name
             relname = relpath(self.vim, fname)
+        # self.debug("sort on empty: %s, '%s'" % (sortonempty, relname))
         if self.useNative:
             idxArr = self.nativeMethod(q, [key(d) for d in c],
                                        relname, limit, ispath)
