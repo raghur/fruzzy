@@ -44,6 +44,13 @@ it in usual operation (python impl is at 300 - 600μs)
 . Run command `:call fruzzy#install()` if you're not using vim-plug.
 . restart nvim
 
+### Manual installation
+
+. Download the module for your platform. If on mac, rename to `fruzzy_mod.so`
+. place in `/path/to/fruzzy/rplugin/python3`
+. Make sure you set the pref to use native module - `g:fruzzy#native=1`
+. restart vim/nvim
+
 ## Troubleshooting/Support
 
 Raise a ticket - please include the following info:
