@@ -22,7 +22,8 @@ def install():
 
     _json = json.loads(urllib.request.urlopen(urllib.request.Request(
         'https://api.github.com/repos/raghur/fruzzy/releases/latest',
-        headers={'Accept': 'application/vnd.github.v3+json'},)).read())
+        headers={'Accept': 'application/vnd.github.v3+json'},))
+                       .read().decode())
     asset = get_asset(_json["assets"])
     # print(__file__)
     dirname = path.normpath(path.join(path.dirname(__file__), ".."))
