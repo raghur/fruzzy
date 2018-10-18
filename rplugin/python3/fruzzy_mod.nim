@@ -300,15 +300,20 @@ iterator fuzzyMatches(query:string, candidates: openarray[string], current: stri
                 heap.push((i, rank))
                 if findFirstN and count == limit * 5:
                     break
-    else: # if blank string just take N items based on levenshtien (rev)
+    elif query == "" and current != "" and ispath: # if query is empty just take N items based on levenshtien (rev)
         for i, x in candidates:
             if current != x:
                 heap.push((i, 300 - current.editDistance(x)))
-    count = 0
-    while count < limit and heap.size > 0:
-        let item =  heap.pop
-        yield item
-        count.inc
+    else: # just return top N items from candidates as is
+        for j in 0 ..< min(limit, candidates.len):
+            yield (j, 0)
+
+    if heap.size > 0:
+        count = 0
+        while count < limit and heap.size > 0:
+            let item =  heap.pop
+            yield item
+            count.inc
 
 proc scoreMatchesStr(query: string, candidates: openarray[string], current: string, limit: int, ispath:bool=true): seq[tuple[i:int, r:int]] {.exportpy.} =
     result = newSeq[tuple[i:int, r:int]](limit)

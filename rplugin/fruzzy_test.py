@@ -9,20 +9,20 @@ else:
     from python3.fruzzy import scoreMatches
 
 
-def scoreMatchesProxy(q, c, limit, key=None, ispath=True):
+def scoreMatchesProxy(q, c, limit=10, current="", key=None, ispath=True):
     def idfn(x):
         return x
     if key is None:
         key = idfn
     if useNative:
         idxArr = scoreMatchesStr(q, [key(x) for x in c],
-                                 "", limit, ispath)
+                                 current, limit, ispath)
         results = []
         for i in idxArr:
             results.append((c[i[0]], i[1]))
         return results
     else:
-        return scoreMatches(q, c, "", limit, key, ispath)
+        return scoreMatches(q, c, current, limit, key, ispath)
 
 
 lines = []
@@ -129,3 +129,10 @@ def test_for_bug_08():
     results = list(scoreMatchesProxy("fmf", c, 10, ispath=True))
     assert results[0][0] == \
         'rplugin/python3/denite/filter/matcher/fruzzymatcher.py'
+
+def test_must_return_topN_when_query_and_current_are_empty():
+    c = ["/this/is/fileone.txt", "/that/was/FileOne.txt"]
+    results = list(scoreMatchesProxy("", c, 10, ispath=False))
+    assert len(results) == 2
+    assert results[0][0] == c[0]
+    assert results[1][0] == c[1]
