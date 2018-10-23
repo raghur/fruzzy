@@ -18,6 +18,10 @@ build-debug:
 	cd $(src) && \
 		nim c --app:lib --out:$(binary) $(infoopt)  fruzzy_mod
 
+build-profile:
+	cd $(src) && \
+		nim c --app:lib --out:$(binary) $(relopt) -d:profile --profiler:on --stackTrace:on  fruzzy_mod
+
 build:
 	cd $(src) && \
 		nim c --app:lib --out:$(binary) $(relopt) fruzzy_mod

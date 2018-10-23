@@ -7,6 +7,9 @@ import sequtils
 import tables
 import os
 import system
+import ospaths
+when defined(profile):
+    import nimprof
 
 proc getVersion(): string {.compileTime.}=
     let ver = staticExec("git describe --tags --always --dirty").strip()
@@ -15,6 +18,8 @@ proc getVersion(): string {.compileTime.}=
     var options:seq[string] = newSeq[string]()
     if not defined(removelogger):
         options.add("info")
+    if defined(profile):
+        options.add("profile")
     if not defined(release):
         options.add("debug")
     else:
@@ -61,7 +66,7 @@ iterator rev(a: VarLenArr): int {.inline.}=
         yield a[i]
 
 # forward declaration
-proc scorer(x: Match, candidate:string, ispath:bool=true): int {.inline.}
+proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}
 
 proc assignScore(s: string, m: var Match) =
     let l = m.positions.len
@@ -148,7 +153,7 @@ iterator fuzzyMatches01(q: string, candidates: openarray[string], limit: int, is
     var heap = newHeap[tuple[i:int, r:int]]() do (a, b: tuple[i:int, r:int]) -> int:
         b.r - a.r
     for i, s in candidates:
-        let m = matcher(q, s)
+        var m = matcher(q, s)
         if m.found:
             let rank = scorer(m, s, ispath)
             heap.push((i, rank))
@@ -160,7 +165,7 @@ iterator fuzzyMatches01(q: string, candidates: openarray[string], limit: int, is
         yield  heap.pop
         count.inc
 
-proc scorer(x: Match, candidate:string, ispath:bool=true): int =
+proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}=
     let lqry = len(x.positions)
     let lcan = len(candidate)
 
@@ -175,27 +180,27 @@ proc scorer(x: Match, candidate:string, ispath:bool=true): int =
         # absolute value of how close it is to end
         end_boost = (100 - (lcan - x.positions[0])) * 2
 
-        var lastSep = candidate.rfind("/")
+        var lastSep = candidate.rfind(ospaths.DirSep)
         if lastSep == -1:
-            lastSep = candidate.rfind("\\")
+            lastSep = candidate.rfind(ospaths.AltSep)
         let fileMatchCount = len(sequtils.filter(x.positions, proc(p: int):bool = p > lastSep))
         info &"fileMatchCount: {candidate}, {lastSep}, {x.positions}, {fileMatchCount}"
         filematchBoost = 100 * fileMatchCount div lqry
 
     # how closely are matches clustered
-    var cluster_boost = 100 * (1 - x.clusterScore div lcan) * 4
+    let cluster_boost = 100 * (1 - x.clusterScore div lcan) * 4
 
     # boost for matches after separators
     # weighted by length of query
-    var sep_boost = (100 * x.sepScore div lqry) * 75 div 100
+    let sep_boost = (100 * x.sepScore div lqry) * 75 div 100
 
     # boost for camelCase matches
     # weighted by lenght of query
-    var camel_boost = 100 * x.camelCaseScore div lqry
+    let camel_boost = 100 * x.camelCaseScore div lqry
 
     return position_boost + end_boost + filematchBoost + cluster_boost + sep_boost + camel_boost
 
-proc walkString(q, orig: string, left, right: int, m: var Match)=
+proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
     l "Call {q} {left} {right}"
     if left > right or right == 0:
         m.found = false
@@ -256,7 +261,7 @@ proc walkString(q, orig: string, left, right: int, m: var Match)=
     m.found = true
     return
 
-proc resetMatch(m: var Match, l:int) {.inline.} = 
+proc resetMatch(m: var Match, l:int) {.inline.} =
     m.found = false
     for j in 0 ..< l:
         m.positions[j] = 0
@@ -264,7 +269,7 @@ proc resetMatch(m: var Match, l:int) {.inline.} =
     m.sepScore = 0
     m.camelCaseScore = 0
 
-proc isMatch(query, candidate: string, m: var Match) =
+proc isMatch(query, candidate: string, m: var Match)  {.inline.}=
     var didMatch = false
     var r = candidate.high
     while not didMatch:
@@ -279,7 +284,7 @@ proc isMatch(query, candidate: string, m: var Match) =
             break
     return
 
-iterator fuzzyMatches(query:string, candidates: openarray[string], current: string, limit: int, ispath: bool = true): tuple[i:int, r:int] =
+iterator fuzzyMatches(query:string, candidates: openarray[string], current: string, limit: int, ispath: bool = true): tuple[i:int, r:int]  {.inline.}=
     let findFirstN = true
     var count = 0
     var mtch:Match
@@ -314,11 +319,11 @@ iterator fuzzyMatches(query:string, candidates: openarray[string], current: stri
             let item =  heap.pop
             yield item
             count.inc
-
+let USEALT = os.existsEnv("FRUZZY_USEALT")
 proc scoreMatchesStr(query: string, candidates: openarray[string], current: string, limit: int, ispath:bool=true): seq[tuple[i:int, r:int]] {.exportpy.} =
     result = newSeq[tuple[i:int, r:int]](limit)
     var idx = 0
-    if os.existsEnv("FRUZZY_USEALT"):
+    if USEALT:
         l "Using alternate impl"
         for m in fuzzyMatches01(query, candidates, limit, ispath):
             result[idx] = m
