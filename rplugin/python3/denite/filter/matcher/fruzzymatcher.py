@@ -1,4 +1,4 @@
-from ..base import Base
+from denite.filter.base import Base
 from denite.util import convert2fuzzy_pattern
 from denite.util import relpath
 import os
