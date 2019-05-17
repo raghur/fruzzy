@@ -136,3 +136,13 @@ def test_must_return_topN_when_query_and_current_are_empty():
     assert len(results) == 2
     assert results[0][0] == c[0]
     assert results[1][0] == c[1]
+
+
+biglist = []
+with open("neomru_file_big") as fh:
+    biglist = [line.strip() for line in fh.readlines()]
+
+
+def test_should_not_crash_with_large_file():
+    results = list(scoreMatchesProxy("cli", biglist, 10, ispath=False))
+    print(f"lenght of results - {len(results)}")
