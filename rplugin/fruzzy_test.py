@@ -146,3 +146,9 @@ with open("neomru_file_big") as fh:
 def test_should_not_crash_with_large_file():
     results = list(scoreMatchesProxy("cli", biglist, 10, ispath=False))
     print(f"lenght of results - {len(results)}")
+
+
+def test_should_handle_unicode_strings():
+    c = ["Ја могу јести стакло, и то ми не штети", "/that/was/FileOne.txt"]
+    results = list(scoreMatchesProxy("стакло", c, 10, ispath=False))
+    assert len(results) == 1
