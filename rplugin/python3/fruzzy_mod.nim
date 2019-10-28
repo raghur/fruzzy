@@ -7,7 +7,7 @@ import sequtils
 import tables
 import os
 import system
-import ospaths
+import std/editdistance
 when defined(profile):
     import nimprof
 
@@ -40,7 +40,7 @@ template info(args: varargs[string, `$`]) =
         info(args)
 
 template l(fmt: string) =
-    when not defined(release):
+    when not defined(removelogger):
         debug(&fmt)
 type
     Match = object
@@ -180,9 +180,9 @@ proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}=
         # absolute value of how close it is to end
         end_boost = (100 - (lcan - x.positions[0])) * 2
 
-        var lastSep = candidate.rfind(ospaths.DirSep)
+        var lastSep = candidate.rfind(os.DirSep)
         if lastSep == -1:
-            lastSep = candidate.rfind(ospaths.AltSep)
+            lastSep = candidate.rfind(os.AltSep)
         let fileMatchCount = len(sequtils.filter(x.positions, proc(p: int):bool = p > lastSep))
         info &"fileMatchCount: {candidate}, {lastSep}, {x.positions}, {fileMatchCount}"
         filematchBoost = 100 * fileMatchCount div lqry
@@ -214,7 +214,7 @@ proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
     for i, c in query:
         l "Looking: {i}, {c}, {l}, {r}"
         if first:
-            pos = strutils.rfind(candidate, c, r)
+            pos = strutils.rfind(candidate, c, l, r)
         else:
             pos = strutils.find(candidate, c, l)
         l "Result: {i}, {pos}, {c}"
@@ -233,7 +233,7 @@ proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
                     # we've run out - clearly, no match possible
                     m.positions[0] = 0
                     return
-                var posLeft = strutils.rfind(candidate, c, np)
+                var posLeft = strutils.rfind(candidate, c, 0, np)
                 l "posLeft:  {c}, {np}, {posLeft}"
                 m.positions[0] = posLeft
                 return
@@ -308,7 +308,7 @@ iterator fuzzyMatches(query:string, candidates: openarray[string], current: stri
     elif query == "" and current != "" and ispath: # if query is empty just take N items based on levenshtien (rev)
         for i, x in candidates:
             if current != x:
-                heap.push((i, 300 - current.editDistance(x)))
+                heap.push((i, 300 - editdistance.editDistanceAscii(current, x)))
     else: # just return top N items from candidates as is
         for j in 0 ..< min(limit, candidates.len):
             yield (j, 0)
@@ -324,7 +324,7 @@ proc scoreMatchesStr(query: string, candidates: openarray[string], current: stri
     result = newSeq[tuple[i:int, r:int]](limit)
     var idx = 0
     if USEALT:
-        l "Using alternate impl"
+        info "Using alternate impl"
         for m in fuzzyMatches01(query, candidates, limit, ispath):
             result[idx] = m
             idx.inc
