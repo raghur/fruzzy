@@ -130,9 +130,16 @@ def test_for_bug_08():
     assert results[0][0] == \
         'rplugin/python3/denite/filter/matcher/fruzzymatcher.py'
 
+
 def test_must_return_topN_when_query_and_current_are_empty():
     c = ["/this/is/fileone.txt", "/that/was/FileOne.txt"]
     results = list(scoreMatchesProxy("", c, 10, ispath=False))
     assert len(results) == 2
     assert results[0][0] == c[0]
     assert results[1][0] == c[1]
+
+
+def test_must_return_match_when_query_match_char_is_to_right():
+    c = ["D:/code/go/src/github.com/raghur/fuzzy-denite/lib/api.pb.go"]
+    results = list(scoreMatchesProxy("gbf", c, 10, ispath=False))
+    assert results[0][0] == c[0]

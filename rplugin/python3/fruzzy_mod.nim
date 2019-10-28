@@ -83,7 +83,7 @@ proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}=
     return position_boost + end_boost + filematchBoost + cluster_boost + sep_boost + camel_boost
 
 proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
-    l "Call {q} {left} {right}, {orig[left..right]}"
+    l "CALL==> {q} {left} {right}, {orig[left..right]}"
     if left > right or right == 0:
         m.found = false
         return
@@ -92,55 +92,36 @@ proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
     var first = true
     var pos:int = -1
     var l = left
-    var r = right
     for i, c in query:
         if first:
-            l "ScanBack: {i}, {c}, candidate[{l}..{r}]: {candidate[l..r]}"
-            pos = strutils.rfind(candidate, c, l, r)
+            l "ScanBack: {i}, {c}, candidate[{l}..{right}]: {candidate[l..right]}"
+            pos = strutils.rfind(candidate, c, l, right)
         else:
-            l "ScanFwd: {i}, {c}, candidate[{l}..{r}]: {candidate[l..r]}"
+            l "ScanFwd: {i}, {c}, candidate[{l}..{right}]: {candidate[l..right]}"
             pos = strutils.find(candidate, c, l)
         l "Result: {i}, {pos}, {c}"
         if pos == -1:
-            m.found = false
-            if first:
-                # if the first char was not found anywhere we're done
-                m.positions[0] = 0
-                return 
-            else:
-                # otherwise, find the non matching char to the left of the
-                # first char pos. Next search on has to be the left of this
-                # position
-                let np = m.positions[0] - 1
-                if np < 0:
-                    # we've run out - clearly, no match possible
-                    m.positions[0] = 0
-                    return
-                var posLeft = strutils.rfind(candidate, c, 0, np)
-                l "posLeft:  {c}, {np}, {candidate[0..np]}, {posLeft}"
-                m.positions[0] = posLeft
-                return
-        else:
-            if pos < candidate.high:
-                let nextChar = orig[pos + 1]
-                if nextChar in sep:
-                    m.sepScore.inc
-            if pos == 0:
+            return
+        if pos < candidate.high:
+            let nextChar = orig[pos + 1]
+            if nextChar in sep:
                 m.sepScore.inc
+        if pos == 0:
+            m.sepScore.inc
+            m.camelCaseScore.inc
+        else:
+            var prevChar = orig[pos - 1]
+            if prevChar in sep:
+                m.sepScore.inc
+            if ord(orig[pos]) < ord('Z') and ord(prevChar) >= ord('a'):
                 m.camelCaseScore.inc
-            else:
-                var prevChar = orig[pos - 1]
-                if prevChar in sep:
-                    m.sepScore.inc
-                if ord(orig[pos]) < ord('Z') and ord(prevChar) >= ord('a'):
-                    m.camelCaseScore.inc
-            m.positions[i] = pos
-            if i == 0:
-                let qlen = q.len
-                m.clusterScore = -1 * ((pos * qlen) + (qlen * (qlen-1) div 2))
-            m.clusterScore.inc(pos)
-            l = pos + 1
-            first = false
+        m.positions[i] = pos
+        if i == 0:
+            let qlen = q.len
+            m.clusterScore = -1 * ((pos * qlen) + (qlen * (qlen-1) div 2))
+        m.clusterScore.inc(pos)
+        l = pos + 1
+        first = false
     m.found = true
     return
 
@@ -161,8 +142,8 @@ proc isMatch(query, candidate: string, m: var Match)  {.inline.}=
         if m.found:
             break  # all done
         # resume search - start looking left from this position onwards
-        r = m.positions[0]
-        if r <= 0:
+        r = m.positions[0] - 1
+        if r < 0:
             m.found = false
             break
     return

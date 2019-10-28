@@ -111,18 +111,7 @@ def isMatch(query, candidate):
                 pos = candidate.find(c, left)
             logging.debug("Result %d, %d, %s", i, pos, c)
             if pos == -1:
-                if first:
-                    # if the first char was not found anywhere we're done
-                    return (False, [])
-                else:
-                    # otherwise, find the non matching char to the left of the
-                    # first char pos. Next search on has to be the left of this
-                    # position
-                    posLeft = candidate.rfind(c, 0, matchPos[0])
-                    if posLeft == -1:
-                        return (False, [])
-                    else:
-                        return (False, [posLeft])
+                return (False, matchPos)
             else:
                 if pos < len(orig) - 1:
                     nextChar = orig[pos + 1]
@@ -152,7 +141,7 @@ def isMatch(query, candidate):
             break  # all done too - first char didn't match
 
         # resume search - start looking left from this position onwards
-        r = positions[0] + 1
+        r = positions[0]
     return (didMatch, positions, *rest)
 
 
