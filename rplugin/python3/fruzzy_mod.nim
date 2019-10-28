@@ -30,7 +30,6 @@ proc getVersion(): string {.compileTime.}=
 
 let L = newConsoleLogger(levelThreshold = logging.Level.lvlDebug)
 addHandler(L)
-const MAXCHARCOUNT = 30
 
 const sep:string = "-/\\_. "
 const VERSION = getVersion()
@@ -47,36 +46,6 @@ type
         found:bool
         positions: seq[int]
         sepScore, clusterScore, camelCaseScore: int
-
-# forward declaration
-proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}
-
-proc assignScore(s: string, m: var Match) =
-    let l = m.positions.len
-    # min possible for consecutive matches like [51, 52, 53, 54]
-    # = 51 * 4 + (4*3/2)
-    # = 210
-    m.clusterScore = -1 * (m.positions[0] * l + l * (l-1) div 2)
-    for i,v in m.positions:
-        if v == 0:
-            m.sepScore.inc
-            m.clusterScore.inc
-        else:
-            let
-                prevChar = s[v-1]
-                ch = s[v]
-            if prevChar in sep:
-                m.sepScore.inc
-            if v < s.high:
-                let nextChar = s[v+1]
-                if nextChar in sep:
-                    m.sepScore.inc
-            if prevChar.isLowerAscii and ch.isUpperAscii:
-                m.camelCaseScore.inc
-        m.clusterScore.inc(v)
-
-proc greaterThan(x : int): (proc(x:int):bool) = 
-    return proc(y:int):bool = return y > x
 
 proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}=
     let lqry = len(x.positions)
@@ -114,7 +83,7 @@ proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}=
     return position_boost + end_boost + filematchBoost + cluster_boost + sep_boost + camel_boost
 
 proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
-    l "Call {q} {left} {right}"
+    l "Call {q} {left} {right}, {orig[left..right]}"
     if left > right or right == 0:
         m.found = false
         return
@@ -125,10 +94,11 @@ proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
     var l = left
     var r = right
     for i, c in query:
-        l "Looking: {i}, {c}, {l}, {r}"
         if first:
+            l "ScanBack: {i}, {c}, candidate[{l}..{r}]: {candidate[l..r]}"
             pos = strutils.rfind(candidate, c, l, r)
         else:
+            l "ScanFwd: {i}, {c}, candidate[{l}..{r}]: {candidate[l..r]}"
             pos = strutils.find(candidate, c, l)
         l "Result: {i}, {pos}, {c}"
         if pos == -1:
@@ -147,7 +117,7 @@ proc walkString(q, orig: string, left, right: int, m: var Match) {.inline.}=
                     m.positions[0] = 0
                     return
                 var posLeft = strutils.rfind(candidate, c, 0, np)
-                l "posLeft:  {c}, {np}, {posLeft}"
+                l "posLeft:  {c}, {np}, {candidate[0..np]}, {posLeft}"
                 m.positions[0] = posLeft
                 return
         else:
