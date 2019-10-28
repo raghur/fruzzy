@@ -47,23 +47,6 @@ type
         found:bool
         positions: seq[int]
         sepScore, clusterScore, camelCaseScore: int
-    VarLenArr = ref array[0..MAXCHARCOUNT, int]
-
-proc newVarLenArr(): VarLenArr =
-    var o = new(VarLenArr)
-    return o
-
-proc len(a: VarLenArr): int {.inline.}= result = a[MAXCHARCOUNT]
-proc `[]`(a: VarLenArr, i: int): int {.inline.} = return a[i]
-proc `$`(a: VarLenArr): string {.inline.} = return $(a)
-proc high(a: VarLenArr): int {.inline.}= return a.len - 1
-proc add(a: VarLenArr, x: int) {.inline.}=
-    let p = a.len
-    a[p] = x
-    a[MAXCHARCOUNT].inc
-iterator rev(a: VarLenArr): int {.inline.}=
-    for i in countdown(a.high, 0):
-        yield a[i]
 
 # forward declaration
 proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}
@@ -92,78 +75,8 @@ proc assignScore(s: string, m: var Match) =
                 m.camelCaseScore.inc
         m.clusterScore.inc(v)
 
-proc rfirst1(a: VarLenArr, predicate: proc(x: int): bool, last:int = -1): tuple[f:bool, v:int] =
-    #[
-    Find first item matching predicate in a(last .. 0)
-    ]#
-    for m in a.rev:
-        if predicate(m):
-            return (true, m)
-    return (false, -1)
-
 proc greaterThan(x : int): (proc(x:int):bool) = 
     return proc(y:int):bool = return y > x
-
-proc checkFullMatch(indexArr: var Table[char, VarLenArr], lq: string, pos: int, m: var Match) =
-    var start = pos
-    m.positions[0] = start
-    l "Checking for entire string match starting from {pos}"
-    m.found = true
-    for k in 1..lq.high:
-        let ch = lq[k]
-        if not indexArr.hasKey(ch):
-            m.found = false
-            break
-        l "looking for {lq[k]} in {indexArr[ch]}, greater than {start}"
-        let (found, v) = rfirst1(indexArr[ch], greaterThan(start))
-        if found:
-            l "found at: {v}"
-            start = v
-            m.positions[k] = v
-        else:
-            m.found = false
-            break
-
-proc matcher(q, s: string):Match =
-    var indexArr = initTable[char, VarLenArr]()
-    let
-        lq = q.toLowerAscii()
-        ls = s.toLowerAscii()
-
-    result.found = false
-    result.positions = newSeq[int](len(q))
-    l "looking for {q} in {s}"
-    for i in countdown(ls.high, 0):
-        let c = ls[i]
-        if not indexArr.hasKey(c):
-            indexArr[c] = newVarLenArr()
-        indexArr[c].add(i)
-        if c == lq[0]:
-            checkFullMatch(indexArr, lq, i, result)
-            if result.found:
-                assignScore(s, result)
-                l "match: {result}"
-                return
-    l "no match: {result}"
-    return result
-
-iterator fuzzyMatches01(q: string, candidates: openarray[string], limit: int, ispath:bool = true):tuple[i:int, r:int] =
-    let findFirstN = true
-    var count = 0
-    var heap = newHeap[tuple[i:int, r:int]]() do (a, b: tuple[i:int, r:int]) -> int:
-        b.r - a.r
-    for i, s in candidates:
-        var m = matcher(q, s)
-        if m.found:
-            let rank = scorer(m, s, ispath)
-            heap.push((i, rank))
-            count.inc
-            if findFirstN and count == limit * 5:
-                break
-    count = 0
-    while count < limit and heap.size > 0:
-        yield  heap.pop
-        count.inc
 
 proc scorer(x: var Match, candidate:string, ispath:bool=true): int {.inline.}=
     let lqry = len(x.positions)
@@ -319,19 +232,14 @@ iterator fuzzyMatches(query:string, candidates: openarray[string], current: stri
             let item =  heap.pop
             yield item
             count.inc
-let USEALT = os.existsEnv("FRUZZY_USEALT")
+
+
 proc scoreMatchesStr(query: string, candidates: openarray[string], current: string, limit: int, ispath:bool=true): seq[tuple[i:int, r:int]] {.exportpy.} =
     result = newSeq[tuple[i:int, r:int]](limit)
     var idx = 0
-    if USEALT:
-        info "Using alternate impl"
-        for m in fuzzyMatches01(query, candidates, limit, ispath):
-            result[idx] = m
-            idx.inc
-    else:
-        for m in fuzzyMatches(query, candidates, current, limit, ispath):
-            result[idx] = m
-            idx.inc
+    for m in fuzzyMatches(query, candidates, current, limit, ispath):
+        result[idx] = m
+        idx.inc
 
     result.setlen(idx)
     return
