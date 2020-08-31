@@ -3,7 +3,7 @@
 This is a matcher plugin for https://github.com/Shougo/denite.nvim[denite.nvim] 
 and https://github.com/ctrlpvim/ctrlp.vim[CtrlP].
 
-Read more at https://blog.rraghur.in/2018/09/27/fruzzy---a-freaky-fast-fuzzy-finder-for-vim/neovim/
+Read more at https://blog.rraghur.in/2018/09/27/fruzzy-a-freaky-fast-fuzzy-finder-for-vim/neovim/
 
 ## Installation
 
